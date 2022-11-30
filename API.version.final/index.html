@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Note ton pote</title>
+</head>
+<body>
+    <body>
+        <div class="container">
+          <h1>Note Ton Pote</h1>
+          <p>Ecris son nom et note le !</p>
+          <form class="form-inline m-2 update"  method="PUT">
+          <table class="table">
+            <tbody></tbody>
+          </table>
+        </form>
+          <form class="form-inline m-2 create"
+        action="./API"
+             method="POST">
+            <label for="name">Nom:</label>
+            <input type="text" class="form-control m-2" id="name" name="name">
+            <label for="score">Score:</label>
+            <input type="number" class="form-control m-2" id="score" name="score">
+            <button type="submit" class="btn btn-primary">Add</button>
+          </form>
+        </div>
+        </body>
+
+        <script>
+            /*
+            Add an event listener to the form for creation
+            */
+            document.querySelector("form.create").addEventListener("submit", ev=>{
+                ev.preventDefault();
+
+                submitHandler("POST", new FormData(document.querySelector("form.create")));
+                ev.target.reset();
+            })
+
+
+            /*
+            name: submitHandler
+            arguments: method, form
+            use: submit a form
+            returns: none
+            */
+            function submitHandler(method, form){
+                
+                fetch("./API", {method: method, body: form})
+                .then(e=>e.text())
+                .then(e=>{
+                    console.log("RESPONSE"+e);
+                
+                console.log("status ", e.status)
+                 let s = new URLSearchParams(window.location.search);
+            render(s.get("id"));
+                
+            });
+            return false;
+            }
+
+            /*
+            name: render
+            arguments: id
+            returns: none
+            use: render a lsit of friends with possibility to update and delete them
+            */
+        async function render(id){
+           
+
+ 
+
+            let update = document.querySelectorAll(".updateAction");
+            let del = document.querySelectorAll(".deleteAction");
+
+            
+        let table = document.querySelector("tbody");
+
+        table.innerHTML = "";
+
+        await fetch("./API", {method: "GET", headers: {"Accept": "json/application", "Content-Type": "json/application" }})
+                .then(e=>e.json())
+                .then(e=>{console.log(e);
+                e.forEach(row=>{
+                    if(row.id != null && row.id != undefined && id != null && id != undefined && row.id == id){
+                        table.innerHTML +=`
+                       
+                            <td><input type="text" class="form-control" name="name" value="${row.name}"></td>
+                    <td><input type="number" class="form-control" name="score" value="${row.score}"></td>
+                       <td><button type="submit" value="submit" class="btn btn-primary">Save</button></td>
+                        <input type="hidden" name="id" value="${row['id']}">
+            
+                     
+                        <td><a class="btn btn-danger deleteAction" data-id="${row.id}" role="button">Delete</a></td>`;
+                    } else {
+                        table.innerHTML +=`<td> ${row.name}</td>
+                        <td> ${row.score}</td>
+                        <td><a class="btn btn-primary updateAction"  data-id="${row.id}" role="button">Update</a></td>
+                    
+                    <td><a class="btn btn-danger deleteAction" data-id="${row.id}" role="button">Delete</a></td>
+                   </tr>`;
+                    }
+                   
+ 
+                })
+                });
+
+                update = document.querySelectorAll(".updateAction");
+                del = document.querySelectorAll(".deleteAction");
+                [...update].forEach(u=>{
+                    u.addEventListener("click", e=>{
+                        window.location.href = "./index.html?id="+u.dataset.id;
+                    })
+               
+                });
+        
+        
+        [...del].forEach(u=>{
+                u.addEventListener("click", ev=>{
+                    let id = ev.target.dataset.id;
+                    fetch("./API?id="+id, {method: "DELETE", headers: {"Accept": "json/application", "Content-Type": "json/application"}})
+                .then(e=>e.text())
+                .then(e=>{console.log(e);
+                    render();
+                })
+            })
+        });
+        document.querySelector("form.update").addEventListener("submit", ev=>{
+                ev.preventDefault();
+                console.log(new FormData(document.querySelector("form.update")));
+                let object = {};
+                new FormData(document.querySelector("form.update")).forEach(function(value, key){
+                    object[key] = value;
+                });
+                var json = JSON.stringify(object);
+                submitHandler("PUT", json);
+            })
+            }
+            let s = new URLSearchParams(window.location.search);
+            render(s.get("id"));
+        </script>
+</body>
+</html>
